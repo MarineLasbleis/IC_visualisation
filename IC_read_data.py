@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-10 09:59:24 marine>
+# Time-stamp: <2016-02-10 17:13:01 marine>
 # Project : IC Dynamics
 # Subproject : read data and plot data
 # Author : Marine Lasbleis
@@ -92,14 +92,115 @@ def average_global(quantity, radius, theta):
     return average_global/volume
 
 
+def crossection_data(data, coordinate, choice, sign=1., i=1):
+    """ Reshape the data to have field of a quantity `data` to plot over either meridional or equatorial cross section.
+
+    INPUT:
+    - data: 3D array (phi, theta, r) (theta is colatitude)
+    - coordinate: 1D array (phi or theta).
+    - sign needs to be positive (1) if Vr, and negative (-1) if Vt
+    OUTPUT:
+    - data_final: 2D array (phi/theta, r)
+    - coordinate: 1D array (phi or theta, but reshape to fullfilled the whole disc)
+
+    If meridional (and theta) is used, data is reshape to have theta from 0 to 2 pi (input should be theta from 0 to pi).
+    If equatorial (and phi) is used, the value for phi[-1] is concatenated to the beginning of the array, to fullfill the disc also. 
+     """
+    
+    iphi, itheta, iradius = data.shape
+    if choice == "meridional":
+        # in this case, coordinate is theta, and i is the i_phi. Output are functions of (theta, r)
+        data_sq1 = np.squeeze(data[i,:,:])
+        data_sq2 = sign*np.squeeze(data[iphi/2,:,:])
+        
+        data_final = np.concatenate((np.array([0.5*(data_sq1[0,:]+data_sq2[0,:])]),
+                               data_sq1,
+                               np.array([0.5*(data_sq1[-1,:]+data_sq2[-1,:])]),
+                               np.flipud(data_sq2),
+                               np.array([0.5*(data_sq1[0,:]+data_sq2[0,:])])))
+        coordinate = np.concatenate((np.array([0]), coordinate,np.array([np.pi]), np.pi+ coordinate, np.array([2.*np.pi])))
+
+        
+    if choice == "equatorial": # in this case, coordinate is phi, and i is not used. Outputs are functions of (phi, r)
+        data_sq = np.squeeze(data[:,itheta/2,:])
+        data_final = np.concatenate((np.array([data_sq[-1, :]]), data_sq))
+        coordinate = np.concatenate((np.array([0]), coordinate))
+        
+
+    return data_final, coordinate
+
+
+def vorticity_phi(Vradius, Vtheta, radius, theta):
+    """ compute the vorticity field in the meridional cross section
+    
+    with the assumptions of cylindrical symmetry (V_\phi = 0 and all \partial/\partial_\phi =0),
+    this gives directly the vorticity field.
+
+    INPUT:
+    - Vradius, Vtheta:  2D arrays produced by `crossection_data()`. Same size (n_t, n_r)
+    - radius: 1D array with radius (size n_r)
+    - theta: 1D array, as produced by `crossection_data()`. Size n_t
+    OUPUT:
+    - vort: vorticity field. 2D array of size (n_t, n_r)
+    """
+
+    dr = np.gradient(radius)
+    dtheta = np.gradient(theta)
+    drVtdr = np.gradient(radius*Vtheta, np.array([dr]))[1]
+    dVrdt = np.gradient(Vradius, np.array([dtheta]).T)[0]
+    vort = np.empty_like(Vradius)
+    vort[:, 1:] = -1./radius[1:] * ( drVtdr[:, 1:] - dVrdt[:, 1:] ) #radius[0]=0, so vort[0]=0
+    return vort
+
+def vorticity_theta(Vradius, Vphi, radius, phi, theta=np.pi/2.):
+    """ compute the vorticity field in the equatorial cross section
+    
+    with the assumptions of cylindrical symmetry (V_\theta = 0 and all \partial/\partial_\theta =0),
+    this gives directly the vorticity field.
+    By default, theta = pi/2 (equatorial plane) and sin(theta)=1.
+
+    INPUT:
+    - Vradius, Vphi:  2D arrays produced by `crossection_data()`. Same size (n_p, n_r)
+    - radius: 1D array with radius (size n_r)
+    - phi: 1D array, as produced by `crossection_data()`. Size n_p
+    OUPUT:
+    - vort: vorticity field (2D array of size (n_p, n_r)
+    """
+
+    dr = np.gradient(radius)
+    dphi = np.gradient(phi)
+    drVpdr = np.gradient(radius*Vphi, dr)[1]
+    dVrdp = np.gradient(Vradius, np.array([dphi]).T)[0]
+    vort = np.empty_like(Vradius)
+    vort[:,1:] = -1./radius[1:] * (dVrdp[:, 1:]/np.sin(theta) - drVpdr[:, 1:])#radius[0]=0, so vort[0]=0
+
+    return vort
+
+
+
 if __name__ == '__main__':
 
     
     time, Ra, Ra_c, P, Ha, Di, Pr, Le, nradius, ntheta, nphi, azsym, radius, theta, phi, Vr, Vt, Vp, Temperature, Composition = import_data_G(name="G_0.02456")
 
     average_T = average_radius(Temperature, theta)
+
+    print Vt.shape
+
     
     print 'T0: ', average_global(Temperature, radius, theta)
     print 'Vr rms: ', np.sqrt(average_global(Vr**2., radius, theta))
     print 'Vh rms: ', np.sqrt(average_global(Vt**2.+Vp**2., radius, theta))
     print 'V rms: ', np.sqrt(average_global(average_velocity(Vr, Vt, Vp)**2., radius, theta))
+    
+    Vr_me, _ = crossection_data(Vr, theta, choice='meridional', sign=1, i=0)
+    Vt_me, theta_total = crossection_data(Vt, theta, choice='meridional', sign=-1,  i=0)
+
+    vorticity_me = vorticity_phi(Vr_me, Vt_me, radius, theta_total)
+
+
+    Vr_eq, _ = crossection_data(Vr, phi, choice='equatorial', sign=1, i=0)
+    Vp_eq, phi_total = crossection_data(Vp, phi, choice='equatorial', sign=-1,  i=0)
+
+    vorticity_eq = vorticity_theta(Vr_eq, Vp_eq, radius, phi_total)
+    
