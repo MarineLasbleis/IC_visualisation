@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-17 14:51:28 marine>
+# Time-stamp: <2016-02-17 16:47:14 marine>
 # Project : IC Dynamics
 # Subproject : plot data
 # Author : Marine Lasbleis
@@ -74,7 +74,28 @@ def NS_cross_section(quantity, t, r, label="test"):
     ax.get_yaxis().set_visible(False)
     
     return
-                     
+
+def NS_quiver_plot(Vr, Vt, t, r, label='test', sampling=5):
+
+    ntheta, nradius = Vr.shape
+    RADIUS = np.tile(r, (ntheta, 1))
+    THETA = np.tile(np.array([t]).T, (1, nradius))
+
+    X = RADIUS * np.sin(THETA)
+    Y = RADIUS * np.cos(THETA)
+
+    Vy = np.sin(THETA)*Vr + np.cos(THETA)*Vt
+    Vz = np.cos(THETA)*Vr - np.sin(THETA)*Vt #TODO : verify if we need to change the theta for half of the profile
+
+    fig, ax = plt.subplots()
+
+    ax.quiver(X[:,::sampling], Y[:,::sampling], Vy[:,::sampling], Vz[:,::sampling], units='x')
+    ax.axis("equal")
+    ax.set_title(label+" NS section")
+    #ax.get_xaxis().set_visible(False)
+    #ax.get_yaxis().set_visible(False)
+
+    plt.show()
 
     
 

@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-17 14:41:31 marine>
+# Time-stamp: <2016-02-17 16:35:32 marine>
 # Project : IC Dynamics
 # Subproject : read data and plot data
 # Author : Marine Lasbleis
@@ -212,7 +212,12 @@ if __name__ == '__main__':
     print vorticity_me.shape, radius.shape, theta_total.shape, phi_total.shape
 
 
+    #TODO : set the two on same figure
     Temperature_me, theta_total = crossection_data(Temperature, theta, choice='meridional', sign=1, i=0)
     IC_plot.NS_cross_section(Temperature_me, theta_total, radius, label="Temperature")
 
+    plt.show()
+
+    IC_plot.NS_quiver_plot(Vr_me, Vt_me, theta_total, radius)
+   
     plt.show()
