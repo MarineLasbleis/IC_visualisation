@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-10 17:13:01 marine>
+# Time-stamp: <2016-02-17 14:41:31 marine>
 # Project : IC Dynamics
 # Subproject : read data and plot data
 # Author : Marine Lasbleis
@@ -7,6 +7,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import FortranFile
+
+# personal routines
+import IC_plot
+
 
 
 def import_data_G(name="G_0.01965", folder_name="./OUT/"):
@@ -203,4 +207,12 @@ if __name__ == '__main__':
     Vp_eq, phi_total = crossection_data(Vp, phi, choice='equatorial', sign=-1,  i=0)
 
     vorticity_eq = vorticity_theta(Vr_eq, Vp_eq, radius, phi_total)
-    
+
+
+    print vorticity_me.shape, radius.shape, theta_total.shape, phi_total.shape
+
+
+    Temperature_me, theta_total = crossection_data(Temperature, theta, choice='meridional', sign=1, i=0)
+    IC_plot.NS_cross_section(Temperature_me, theta_total, radius, label="Temperature")
+
+    plt.show()
