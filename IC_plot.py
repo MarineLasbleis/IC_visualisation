@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-17 14:48:52 marine>
+# Time-stamp: <2016-02-17 14:51:28 marine>
 # Project : IC Dynamics
 # Subproject : plot data
 # Author : Marine Lasbleis
@@ -68,7 +68,7 @@ def NS_cross_section(quantity, t, r, label="test"):
 
     CS = ax.contourf(X, Y, quantity, nb_contour, cmap=plt.cm.hot)
     ax.axis("equal")
-    ax.set_title(label)
+    ax.set_title(label+" NS section")
     plt.colorbar(CS)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
