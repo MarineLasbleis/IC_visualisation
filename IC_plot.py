@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-17 16:47:14 marine>
+# Time-stamp: <2016-02-18 11:07:07 marine>
 # Project : IC Dynamics
 # Subproject : plot data
 # Author : Marine Lasbleis
@@ -51,13 +51,11 @@ def plot_radius(folder_name="./OUT/", radius="rayon"):
     plt.show()
 
 
-def NS_cross_section(quantity, t, r, label="test"):
+def NS_cross_section(quantity, t, r, fig_info, label="test"):
     """ meridional cross section. """
 
     nb_contour = 30
     ntheta, nradius = quantity.shape
-
-    fig, ax = plt.subplots()
 
     RADIUS = np.tile(r, (ntheta, 1))
     THETA = np.tile(np.array([t]).T, (1, nradius))
@@ -66,17 +64,18 @@ def NS_cross_section(quantity, t, r, label="test"):
     Y = RADIUS * np.cos(THETA)
 
 
-    CS = ax.contourf(X, Y, quantity, nb_contour, cmap=plt.cm.hot)
-    ax.axis("equal")
-    ax.set_title(label+" NS section")
+    CS = fig_info[1].contourf(X, Y, quantity, nb_contour, cmap=plt.cm.hot)
+    fig_info[1].axis("equal")
+    fig_info[1].set_title(label+" NS section")
     plt.colorbar(CS)
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
+    fig_info[1].get_xaxis().set_visible(False)
+    fig_info[1].get_yaxis().set_visible(False)
     
     return
 
-def NS_quiver_plot(Vr, Vt, t, r, label='test', sampling=5):
+def NS_quiver_plot(Vr, Vt, t, r, fig_info, label='test', sampling=5):
 
+    
     ntheta, nradius = Vr.shape
     RADIUS = np.tile(r, (ntheta, 1))
     THETA = np.tile(np.array([t]).T, (1, nradius))
@@ -87,15 +86,13 @@ def NS_quiver_plot(Vr, Vt, t, r, label='test', sampling=5):
     Vy = np.sin(THETA)*Vr + np.cos(THETA)*Vt
     Vz = np.cos(THETA)*Vr - np.sin(THETA)*Vt #TODO : verify if we need to change the theta for half of the profile
 
-    fig, ax = plt.subplots()
+    fig_info[1].quiver(X[:,::sampling], Y[:,::sampling], Vy[:,::sampling], Vz[:,::sampling], units='x')
+    fig_info[1].axis("equal")
+    fig_info[1].set_title(label+" NS section")
+    fig_info[1].get_xaxis().set_visible(False)
+    fig_info[1].get_yaxis().set_visible(False)
 
-    ax.quiver(X[:,::sampling], Y[:,::sampling], Vy[:,::sampling], Vz[:,::sampling], units='x')
-    ax.axis("equal")
-    ax.set_title(label+" NS section")
-    #ax.get_xaxis().set_visible(False)
-    #ax.get_yaxis().set_visible(False)
 
-    plt.show()
 
     
 

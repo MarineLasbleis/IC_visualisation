@@ -1,5 +1,5 @@
 #!/usr/local/bin/python
-# Time-stamp: <2016-02-17 16:35:32 marine>
+# Time-stamp: <2016-02-18 11:06:34 marine>
 # Project : IC Dynamics
 # Subproject : read data and plot data
 # Author : Marine Lasbleis
@@ -214,10 +214,14 @@ if __name__ == '__main__':
 
     #TODO : set the two on same figure
     Temperature_me, theta_total = crossection_data(Temperature, theta, choice='meridional', sign=1, i=0)
-    IC_plot.NS_cross_section(Temperature_me, theta_total, radius, label="Temperature")
+    Composition_me, theta_total = crossection_data(Composition, theta, choice='meridional', sign=1, i=0)
 
-    plt.show()
-
-    IC_plot.NS_quiver_plot(Vr_me, Vt_me, theta_total, radius)
+    fig, ax = plt.subplots(1)
+    IC_plot.NS_cross_section(Temperature_me, theta_total, radius, label="Temperature", fig_info=(fig, ax))
+    IC_plot.NS_quiver_plot(Vr_me, Vt_me, theta_total, radius, label="Temperature and velocity", fig_info=(fig, ax))
+    
+    fig2, ax2 = plt.subplots(1)
+    IC_plot.NS_cross_section(Composition_me, theta_total, radius, label="Composition", fig_info=(fig2, ax2))
+    IC_plot.NS_quiver_plot(Vr_me, Vt_me, theta_total, radius, label="Composition and velocity", fig_info=(fig2, ax2))
    
     plt.show()
