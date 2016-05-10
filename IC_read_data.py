@@ -81,19 +81,21 @@ def average_radius(quantity, theta):
     return np.sum(np.sum(quantity, axis=0), axis=0)/ np.sum(np.sum(np.sin(THETA), axis=0), axis=0)
 
 
-def average_global(quantity, radius, theta):
+def average_global(quantity, radius, theta, nphi):
     """ mean value over the whole volume """
+ 
 
+    nradius = len(radius)
     THETA = np.tile(np.array([theta]).T, (1, nphi)) #create copies of theta along the dimension of the radius
     THETA = np.tile(THETA, (nradius, 1, 1)) # create copies of theta along the dimension of the longitude
     
     quantity_radius = average_radius(quantity, theta)
     dr = np.diff(radius)
-    average_global = np.sum(dr*0.5*(quantity_radius[:-1]*radius[:-1]**2+quantity_radius[1:]*radius[1:]**2))
+    average = np.sum(dr*0.5*(quantity_radius[:-1]*radius[:-1]**2+quantity_radius[1:]*radius[1:]**2))
     volume = np.sum(dr*0.5*(radius[:-1]**2+radius[1:]**2))
 
 
-    return average_global/volume
+    return average/volume
 
 
 def crossection_data(data, coordinate, choice, sign=1., i=1):
@@ -182,20 +184,21 @@ def vorticity_theta(Vradius, Vphi, radius, phi, theta=np.pi/2.):
 
 
 
-if __name__ == '__main__':
+def tests(filename):
 
     
-    time, Ra, Ra_c, P, Ha, Di, Pr, Le, nradius, ntheta, nphi, azsym, radius, theta, phi, Vr, Vt, Vp, Temperature, Composition = import_data_G(name="G_0.02456")
+    time, Ra, Ra_c, P, Ha, Di, Pr, Le, nradius, ntheta, nphi, azsym, radius, theta, phi, Vr, Vt, Vp, Temperature, Composition = import_data_G(name=filename)
 
     average_T = average_radius(Temperature, theta)
 
     print Vt.shape
+    print nphi
+    print nradius, len(radius)
 
-    
-    print 'T0: ', average_global(Temperature, radius, theta)
-    print 'Vr rms: ', np.sqrt(average_global(Vr**2., radius, theta))
-    print 'Vh rms: ', np.sqrt(average_global(Vt**2.+Vp**2., radius, theta))
-    print 'V rms: ', np.sqrt(average_global(average_velocity(Vr, Vt, Vp)**2., radius, theta))
+    print 'T0: ', average_global(Temperature, radius, theta, nphi)
+    print 'Vr rms: ', np.sqrt(average_global(Vr**2., radius, theta, nphi))
+    print 'Vh rms: ', np.sqrt(average_global(Vt**2.+Vp**2., radius, theta, nphi))
+    print 'V rms: ', np.sqrt(average_global(average_velocity(Vr, Vt, Vp)**2., radius, theta, nphi))
     
     Vr_me, _ = crossection_data(Vr, theta, choice='meridional', sign=1, i=0)
     Vt_me, theta_total = crossection_data(Vt, theta, choice='meridional', sign=-1,  i=0)
@@ -225,3 +228,11 @@ if __name__ == '__main__':
     IC_plot.NS_quiver_plot(Vr_me, Vt_me, theta_total, radius, label="Composition and velocity", fig_info=(fig2, ax2))
    
     plt.show()
+
+
+
+if __name__ == '__main__':
+
+
+    tests("G_0.25527")
+
